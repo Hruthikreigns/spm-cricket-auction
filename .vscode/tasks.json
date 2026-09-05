@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API",
+      "type": "shell",
+      "command": "python -m uvicorn app.main:app --reload --port 8000",
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "DATABASE_URL": "sqlite:///./auction.db",
+          "JWT_SECRET": "local-dev-secret",
+          "ADMIN_EMAIL": "admin@cricauction.com",
+          "ADMIN_PASSWORD": "admin123"
+        }
+      },
+      "isBackground": true,
+      "presentation": { "group": "run", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "presentation": { "group": "run", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start the auction app",
+      "dependsOn": ["API", "Web"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Install everything",
+      "type": "shell",
+      "command": "pip install -r backend/requirements.txt && cd frontend && npm install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Seed demo data",
+      "type": "shell",
+      "command": "python -m app.seed",
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": { "DATABASE_URL": "sqlite:///./auction.db" }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run tests",
+      "type": "shell",
+      "command": "python -m pytest tests/ -v",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Three palettes. --accent is whatever the money and the live pills are set
+   in; --on-accent is the text that sits on top of it, which has to change per
+   theme or the primary buttons go unreadable.
+   --lift is the panel shadow: none on dark, soft on the light themes, where
+   flat panels on a pale ground otherwise disappear. */
+
+/* Night is the default: the room is dark, the screen is the floodlight. */
+:root[data-theme='night'] {
+  --pitch: #0a1410;
+  --panel: #10231c;
+  --raised: #163026;
+  --line: #1e3a30;
+  --ink: #f4f6f1;
+  --muted: #8fa69b;
+  --amber: #ffb020;
+  --cherry: #e86b60;
+  --willow: #e3cfa0;
+  --on-accent: #0a1410;
+  --lift: none;
+  --flood: rgba(255, 176, 32, 0.22);
+}
+
+:root[data-theme='day'] {
+  --pitch: #f2f4f0;
+  --panel: #ffffff;
+  --raised: #e8ece5;
+  --line: #d3dbd2;
+  --ink: #0d1a15;
+  --muted: #5c6b63;
+  --amber: #8a5600;
+  --cherry: #b8332a;
+  --willow: #7a6335;
+  --on-accent: #ffffff;
+  --lift: 0 1px 2px rgba(13, 26, 21, 0.05);
+  --flood: rgba(176, 111, 0, 0.12);
+}
+
+/* Registration wears royal blue on white. It's the one page strangers see
+   first, often on a phone in daylight, so it stays bright and calm rather
+   than borrowing the auction room's floodlit look. */
+:root[data-theme='register'] {
+  --pitch: #f5f7ff;
+  --panel: #ffffff;
+  --raised: #e9edfb;
+  --line: #d3dbf5;
+  --ink: #0f1c3f;
+  --muted: #4a5578;
+  --amber: #1d4ed8;
+  --cherry: #c2185b;
+  --willow: #3b6fd4;
+  --on-accent: #ffffff;
+  --lift: 0 1px 3px rgba(15, 28, 63, 0.07), 0 8px 24px -12px rgba(29, 78, 216, 0.2);
+  --flood: rgba(29, 78, 216, 0.14);
+}
+
+/* Royal: white ground, violet ink. Built for a bright hall and a projector,
+   where the dark themes wash out. */
+:root[data-theme='royal'] {
+  --pitch: #faf7ff;
+  --panel: #ffffff;
+  --raised: #f2ecfd;
+  --line: #e2d7f7;
+  --ink: #1f1235;
+  --muted: #6b5b8a;
+  --amber: #6d28d9;
+  --cherry: #c2185b;
+  --willow: #8b5cf6;
+  --on-accent: #ffffff;
+  --lift: 0 1px 3px rgba(31, 18, 53, 0.07), 0 8px 24px -12px rgba(109, 40, 217, 0.18);
+  --flood: rgba(109, 40, 217, 0.16);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-pitch font-body text-ink antialiased;
+    font-feature-settings: 'ss01';
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--amber);
+    color: var(--on-accent);
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display uppercase leading-[0.86] tracking-tightest;
+  }
+}
+
+@layer components {
+  /* A label that names a section without shouting over it. */
+  .eyebrow {
+    @apply font-mono text-[0.65rem] uppercase tracking-eyebrow text-muted;
+  }
+
+  .panel {
+    @apply rounded-sm border border-line bg-panel;
+    box-shadow: var(--lift);
+  }
+
+  .money {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border px-4 py-2.5
+      font-mono text-xs uppercase tracking-eyebrow transition
+      disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply btn border-amber bg-amber hover:brightness-110;
+    color: var(--on-accent);
+  }
+
+  .btn-ghost {
+    @apply btn border-line bg-transparent text-ink hover:border-amber hover:text-amber;
+  }
+
+  .btn-danger {
+    @apply btn border-cherry bg-cherry text-white hover:brightness-110;
+  }
+
+  .field {
+    @apply w-full rounded-sm border border-line bg-pitch px-3 py-2.5 text-sm text-ink
+      placeholder:text-muted focus:border-amber focus:outline-none;
+  }
+
+  /* Crease lines: a hairline grid that reads as a marked-out ground. */
+  .crease {
+    background-image: linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: center;
+  }
+}
+
+/* The floodlight wash sits behind the hero and the block card. */
+.floodlight::before {
+  content: '';
+  position: absolute;
+  inset: -40% 10% auto 10%;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 0%, var(--flood), transparent 65%);
+  pointer-events: none;
+  animation: floodlight 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

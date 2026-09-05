@@ -1,0 +1,11 @@
+{
+  "python.testing.pytestArgs": ["backend/tests"],
+  "python.testing.pytestEnabled": true,
+  "python.analysis.extraPaths": ["./backend"],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/*.db": true
+  },
+  "tailwindCSS.experimental.classRegex": [["className=\"([^\"]*)"]]
+}

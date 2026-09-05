@@ -1,0 +1,6 @@
+{$DOMAIN} {
+	encode gzip
+	# One upstream: the web container's nginx already routes /api and the
+	# auction WebSocket through to the API.
+	reverse_proxy web:80
+}
