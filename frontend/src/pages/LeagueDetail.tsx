@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { TiltCard } from '../components/motion'
 import { Link, useParams } from 'react-router-dom'
 
 import { Avatar, Eyebrow, Loading, Note, Pill, Stat } from '../components/ui'
 import { api } from '../lib/api'
-import { ROLE_LABEL, money, useAsync, useAuth } from '../lib/hooks'
+import { ROLE_LABEL, initials, money, useAsync, useAuth } from '../lib/hooks'
 import type { ArchivedPlayer, LeagueStatus } from '../lib/types'
 
 const dateLabel = (value: string | null) =>
@@ -197,47 +198,52 @@ export function LeagueDetail() {
 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           {data.squads.map((squad) => (
-            <article key={squad.team.id} className="panel p-5">
-              <Link
-                to={`/teams/${squad.team.id}`}
-                className="flex items-center gap-3 transition hover:text-amber"
-              >
-                <Avatar name={squad.team.name} src={squad.team.logo_url} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-2xl">{squad.team.name}</h3>
-                  <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-muted">
-                    {squad.owner_name ? `${squad.owner_name} · ` : ''}
-                    {squad.player_count} players · see the squad →
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="money text-lg text-amber">{money(squad.spent)}</p>
-                  <p className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-muted">
-                    {money(squad.remaining_purse)} left
-                  </p>
-                </div>
-              </Link>
-
-              {/* No player list here — squads first, then the squad's own page
-                  shows who it holds. */}
-              <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-line pt-3">
-                <span className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-muted">
-                  {squad.player_count} players
-                  {squad.retained_count > 0 && ` · ${squad.retained_count} retained`}
-                </span>
-                {squad.most_expensive != null && (
-                  <span className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-muted">
-                    top buy <span className="text-amber">{money(squad.most_expensive)}</span>
+            // Each squad as a small team banner, tilting toward the pointer.
+            <TiltCard key={squad.team.id}>
+              <article className="squad-hero h-full overflow-hidden rounded-xl p-5">
+                <Link to={`/teams/${squad.team.id}`} className="flex items-center gap-3">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg border-2 border-white/80 bg-white shadow-lg">
+                    {squad.team.logo_url ? (
+                      <img src={squad.team.logo_url} alt="" className="h-full w-full object-contain p-1" />
+                    ) : (
+                      <span className="font-display text-xl font-black text-[#0f1c3f]">
+                        {(squad.team.short_name ?? initials(squad.team.name)).slice(0, 3)}
+                      </span>
+                    )}
                   </span>
-                )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-3xl text-white">{squad.team.name}</h3>
+                    <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/70">
+                      {squad.owner_name ? `Owner ${squad.owner_name} · ` : ''}
+                      {squad.player_count} players
+                      {squad.retained_count > 0 && ` · ${squad.retained_count} retained`}
+                    </p>
+                  </div>
+                </Link>
+
+                <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
+                  <div>
+                    <dt>Spent</dt>
+                    <dd className="text-lg">{money(squad.spent)}</dd>
+                  </div>
+                  <div>
+                    <dt>Left</dt>
+                    <dd className="text-lg">{money(squad.remaining_purse)}</dd>
+                  </div>
+                  <div>
+                    <dt>Top buy</dt>
+                    <dd className="text-lg">{money(squad.most_expensive)}</dd>
+                  </div>
+                </dl>
+
                 <Link
                   to={`/teams/${squad.team.id}`}
-                  className="ml-auto font-mono text-[0.65rem] uppercase tracking-eyebrow text-amber"
+                  className="btn mt-5 min-h-11 w-full border-white/30 text-white hover:border-amber hover:text-amber"
                 >
-                  See the players →
+                  See the squad lineup →
                 </Link>
-              </div>
-            </article>
+              </article>
+            </TiltCard>
           ))}
         </div>
       </section>
