@@ -5,9 +5,9 @@ import { m } from 'motion/react'
 import { HeroStage } from '../components/HeroStage'
 import { CountUp, EASE_OUT, Reveal, SplitHeadline, Stagger, StaggerItem, TiltCard } from '../components/motion'
 
-import { Avatar, Eyebrow, Empty, Loading, Note, Pill, Stat, TeamBadge } from '../components/ui'
+import { Avatar, Eyebrow, Loading, Note, Pill, Stat, TeamBadge } from '../components/ui'
 import { api } from '../lib/api'
-import { BANNER } from '../lib/brand'
+import { APP_NAME, BANNER } from '../lib/brand'
 import { loadGsap } from '../lib/gsap'
 import { money, useAsync, useLiveAuction } from '../lib/hooks'
 import { useLeague } from '../lib/league'
@@ -23,21 +23,38 @@ export function Home() {
   const { state } = useLiveAuction(league?.id ?? null)
   const stats = useAsync(() => (league ? api.analytics(league.id) : Promise.resolve(null)), [league?.id])
 
-  if (loading) return <Loading label="Loading the league" />
-  if (error)
+  // The stage is the same whatever the data: loading, an API error and an
+  // empty install all still open on the floodlit ground.
+  if (loading || error || !league)
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16">
-        <Note tone="error">{error}</Note>
-      </div>
-    )
-  if (!league)
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-20">
-        <Empty
-          title="No league yet"
-          hint="Sign in as an administrator to create a league, add teams and import your player register."
-        />
-      </div>
+      <HeroStage>
+        <div className="mx-auto max-w-7xl px-4 pb-14 pt-[34svh] sm:px-6 md:py-24">
+          <SplitHeadline text={APP_NAME} className="max-w-3xl text-6xl font-black sm:text-8xl lg:text-9xl" />
+          <div className="lit-rule mt-6 w-24" />
+          <div className="mt-6 max-w-xl">
+            {loading ? (
+              <Loading label="Loading the league" />
+            ) : error ? (
+              <Note tone="error">{error}</Note>
+            ) : (
+              <>
+                <p className="text-lg text-muted">
+                  No league yet. Sign in as an administrator to create a league, add teams and
+                  import your player register.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link to="/admin/login" className="btn-primary min-h-11">
+                    Admin sign in
+                  </Link>
+                  <Link to="/leagues" className="btn-ghost glass min-h-11">
+                    Leagues
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </HeroStage>
     )
 
   const onBlock = state?.current_player
