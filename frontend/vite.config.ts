@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
+    // The 3D chunk is lazy and only fetched by the home hero on capable
+    // devices; it is expected to be large.
+    chunkSizeWarningLimit: 1100,
     rollupOptions: {
       output: {
         // Charts only load on the admin dashboard, so keep them out of the
@@ -11,6 +14,9 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           charts: ['recharts'],
+          // Interface animation runtime, shared by every page. GSAP is
+          // imported lazily and gets its own chunk.
+          motion: ['motion/react'],
         },
       },
     },
