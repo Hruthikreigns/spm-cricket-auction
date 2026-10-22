@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject, type RefOb
 import * as THREE from 'three'
 
 import type { GfxTier, Palette } from '../../lib/device'
+import { Cricketers } from './Cricketers'
 
 /**
  * The hero: a night ground seen from behind the bowler's arm.
@@ -139,7 +140,7 @@ function outfieldTexture(base: string, dark: boolean) {
 const BALL_RADIUS = 0.34
 const BALL_Z = 10.2
 // Height of the view's centre line where it passes the ball.
-const SCREEN_MID_Y = 1.74
+const SCREEN_MID_Y = 1.94
 const STITCHES = 72
 
 function Ball({
@@ -629,10 +630,12 @@ function Motes({ count, palette, reducedMotion }: { count: number; palette: Pale
 // --------------------------------------------------------------------------
 // Camera: a load-in push, then scroll pulls it up and back
 // --------------------------------------------------------------------------
-const CAM_START = new THREE.Vector3(0, 1.3, 11.6)
-const CAM_REST = new THREE.Vector3(0, 1.95, 14.2)
-const CAM_END = new THREE.Vector3(0, 7.5, 19.5)
-const LOOK_REST = new THREE.Vector3(0, 1.2, 0)
+// The camera sits up and back behind the batter, broadcast-style, so the
+// players read at a natural size and the whole pitch is in view.
+const CAM_START = new THREE.Vector3(0, 2.1, 17.2)
+const CAM_REST = new THREE.Vector3(0, 3.0, 20.5)
+const CAM_END = new THREE.Vector3(0, 10, 27)
+const LOOK_REST = new THREE.Vector3(0, 0.9, 0)
 const LOOK_END = new THREE.Vector3(0, 0, -2)
 
 function CameraRig({ progress, reducedMotion }: { progress: MutableRefObject<number>; reducedMotion: boolean }) {
@@ -913,7 +916,7 @@ export default function StadiumScene({
       aria-hidden
     >
       <color attach="background" args={[palette.pitch]} />
-      <fog attach="fog" args={[palette.pitch, 22, palette.dark ? 62 : 75]} />
+      <fog attach="fog" args={[palette.pitch, 28, palette.dark ? 72 : 85]} />
 
       <PerformanceMonitor
         onDecline={() => {
@@ -939,6 +942,7 @@ export default function StadiumScene({
       <Floodlights palette={palette} tier={degraded ? 'low' : 'high'} />
       <Motes count={degraded ? 380 : 1400} palette={palette} reducedMotion={reducedMotion} />
       <Ball reducedMotion={reducedMotion} tier={degraded ? 'low' : 'high'} layout={layout} groupRef={ballRef} />
+      <Cricketers reducedMotion={reducedMotion} lite={degraded} trails={palette.ultra && !degraded} />
       {palette.ultra && <UltraFX ball={ballRef} reducedMotion={reducedMotion} lite={degraded} />}
 
       {bloom ? (
