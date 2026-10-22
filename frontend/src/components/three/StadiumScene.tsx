@@ -26,6 +26,8 @@ export interface StadiumSceneProps {
   /** Element that receives pointer events, so text over the canvas stays live. */
   eventSource: RefObject<HTMLElement>
   onFail: () => void
+  /** 'hero': ball beside the headline. 'center': ball in the middle, for a card. */
+  layout?: 'hero' | 'center'
 }
 
 // --------------------------------------------------------------------------
@@ -140,7 +142,7 @@ const BALL_Z = 10.2
 const SCREEN_MID_Y = 1.74
 const STITCHES = 72
 
-function Ball({ reducedMotion, tier }: { reducedMotion: boolean; tier: 'low' | 'high' }) {
+function Ball({ reducedMotion, tier, layout = 'hero' }: { reducedMotion: boolean; tier: 'low' | 'high'; layout?: 'hero' | 'center' }) {
   const group = useRef<THREE.Group>(null)
   const spinner = useRef<THREE.Group>(null)
   const stitches = useRef<THREE.InstancedMesh>(null)
@@ -232,9 +234,12 @@ function Ball({ reducedMotion, tier }: { reducedMotion: boolean; tier: 'low' | '
     const dist = CAM_REST.z - BALL_Z
     const halfH = Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2)) * dist
     const halfW = halfH * (size.width / size.height)
-    const fit = Math.min(halfH * (wide ? 0.3 : 0.22), halfW * (wide ? 0.2 : 0.4)) / BALL_RADIUS
-    const targetX = wide ? halfW * 0.5 : 0
-    const targetY = SCREEN_MID_Y + (wide ? halfH * 0.1 : halfH * 0.56)
+    const center = layout === 'center'
+    const fit = center
+      ? Math.min(halfH * 0.3, halfW * 0.3) / BALL_RADIUS
+      : Math.min(halfH * (wide ? 0.3 : 0.22), halfW * (wide ? 0.2 : 0.4)) / BALL_RADIUS
+    const targetX = center ? 0 : wide ? halfW * 0.5 : 0
+    const targetY = SCREEN_MID_Y + (center ? halfH * 0.34 : wide ? halfH * 0.1 : halfH * 0.56)
 
     if (!reducedMotion) intro.current = Math.min(1, state.clock.elapsedTime / 1.6)
     const t = intro.current
@@ -691,6 +696,7 @@ export default function StadiumScene({
   progress,
   eventSource,
   onFail,
+  layout = 'hero',
 }: StadiumSceneProps) {
   const [degraded, setDegraded] = useState(tier === 'low')
   const maxDpr = tier === 'high' ? 2 : 1.25
@@ -747,7 +753,7 @@ export default function StadiumScene({
       <Ground palette={palette} />
       <Floodlights palette={palette} tier={degraded ? 'low' : 'high'} />
       <Motes count={degraded ? 380 : 1400} palette={palette} reducedMotion={reducedMotion} />
-      <Ball reducedMotion={reducedMotion} tier={degraded ? 'low' : 'high'} />
+      <Ball reducedMotion={reducedMotion} tier={degraded ? 'low' : 'high'} layout={layout} />
 
       {bloom ? (
         <EffectComposer multisampling={0} enableNormalPass={false}>

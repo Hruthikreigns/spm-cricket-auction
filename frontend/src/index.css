@@ -325,3 +325,17 @@
 .squad-card:hover .squad-glare {
   opacity: 1;
 }
+
+/* ---------- Auction room depth ---------- */
+.block-scrim {
+  background: linear-gradient(0deg, var(--panel) 0%, color-mix(in srgb, var(--panel) 75%, transparent) 30%, transparent 62%);
+}
+.block-photo {
+  box-shadow: 0 30px 50px -24px rgba(0, 0, 0, 0.65), 0 0 0 1px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+.bid-glow {
+  text-shadow: 0 0 28px color-mix(in srgb, var(--amber) 45%, transparent);
+}
+.paddle-lead {
+  box-shadow: 0 24px 50px -20px color-mix(in srgb, var(--amber) 55%, transparent), 0 0 0 1px var(--amber);
+}

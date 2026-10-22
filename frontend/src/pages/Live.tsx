@@ -5,6 +5,7 @@ import { BlockCard } from '../components/BlockCard'
 import { Fireworks } from '../components/Fireworks'
 import { Link } from 'react-router-dom'
 
+import { TiltCard } from '../components/motion'
 import { Empty, Eyebrow, LeagueMark, Loading, Pill, TeamBadge, TeamPaddle } from '../components/ui'
 import { money, useAuth, useLiveAuction, type Hammer } from '../lib/hooks'
 import { useLeague } from '../lib/league'
@@ -33,10 +34,12 @@ function HammerBannerBody({ hammer }: { hammer: Hammer }) {
   return (
     <m.div
       role="status"
-      initial={{ opacity: 0, y: -12, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+      // Lands like a stamp: drops in large and tilted, then slams flat.
+      initial={{ opacity: 0, scale: 1.6, rotateX: 55, y: -20 }}
+      animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
+      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 520, damping: 24 }}
+      style={{ transformPerspective: 900, transformOrigin: '50% 0%' }}
       className={`panel mb-4 flex flex-wrap items-center gap-3 border-l-4 p-4 ${
         sold ? 'border-l-amber' : 'border-l-cherry'
       }`}
@@ -166,17 +169,26 @@ export function Live() {
         {/* The board sits level with the block card and fills the same height,
             so the two read as one screen rather than a card with a list
             hanging off it. */}
-        <aside className="panel flex flex-col justify-center gap-3 p-4">
+        <aside className="panel flex flex-col justify-center gap-3 p-4 [perspective:1200px]">
           <Eyebrow>Purse board</Eyebrow>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {teams.map((team) => (
-              <TeamPaddle
-                key={team.id}
-                team={team}
-                leading={team.id === leadingTeamId}
-                size="lg"
-              />
-            ))}
+            {teams.map((team, i) => {
+              const leading = team.id === leadingTeamId
+              return (
+                // The squad holding the top bid steps forward off the board.
+                <m.div
+                  key={team.id}
+                  className={`relative rounded-sm ${leading ? 'z-10 paddle-lead' : ''}`}
+                  initial={{ opacity: 0, rotateX: 35, y: 24 }}
+                  animate={{ opacity: 1, rotateX: 0, y: 0, z: leading ? 60 : 0, scale: leading ? 1.03 : 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 22, delay: i * 0.04 }}
+                >
+                  <TiltCard>
+                    <TeamPaddle team={team} leading={leading} size="lg" />
+                  </TiltCard>
+                </m.div>
+              )
+            })}
           </div>
         </aside>
       </div>

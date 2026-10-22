@@ -1,5 +1,9 @@
+import { AnimatePresence, m, useReducedMotion } from 'motion/react'
+
 import { ROLE_LABEL, money } from '../lib/hooks'
 import type { AuctionState } from '../lib/types'
+import { StadiumBox } from './HeroStage'
+import { EASE_OUT, TiltCard } from './motion'
 import { TeamBadge } from './ui'
 
 /**
@@ -7,7 +11,32 @@ import { TeamBadge } from './ui'
  * stays quiet so this can be loud: the jersey number is set as a ghosted
  * numeral behind the portrait, and the live figure is mono and enormous.
  */
-export function BlockCard({
+/**
+ * Each new player arrives with a 3D flip, like a card turned over on the
+ * table; the empty block shows the floodlit ground with the ball.
+ */
+export function BlockCard(props: { state: AuctionState; contact?: string | null }) {
+  const reduced = useReducedMotion()
+  const key = props.state.current_player?.id ?? 'empty'
+  return (
+    <div className="[perspective:1600px]">
+      <AnimatePresence mode="wait" initial={false}>
+        <m.div
+          key={key}
+          initial={reduced ? { opacity: 0 } : { opacity: 0, rotateY: -70, scale: 0.92 }}
+          animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, rotateY: 70, scale: 0.92 }}
+          transition={{ duration: 0.55, ease: EASE_OUT }}
+          style={{ transformOrigin: '50% 50%' }}
+        >
+          <BlockCardBody {...props} />
+        </m.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function BlockCardBody({
   state,
   contact,
 }: {
@@ -19,9 +48,11 @@ export function BlockCard({
 
   if (!player) {
     return (
-      <div className="panel crease floodlight relative flex min-h-[22rem] flex-col items-center justify-center gap-3 overflow-hidden px-6 text-center">
-        <h2 className="text-4xl sm:text-6xl">Nobody on the block</h2>
-        <p className="max-w-sm text-sm text-muted">
+      <div className="panel relative flex min-h-[24rem] flex-col items-center justify-end gap-3 overflow-hidden px-6 pb-10 text-center sm:min-h-[28rem]">
+        <StadiumBox />
+        <div aria-hidden className="block-scrim pointer-events-none absolute inset-0" />
+        <h2 className="relative text-4xl sm:text-6xl">Nobody on the block</h2>
+        <p className="relative max-w-sm text-sm text-muted">
           {state.status === 'RUNNING'
             ? `${state.remaining_in_pool} players left.`
             : state.status === 'PAUSED'
@@ -47,7 +78,8 @@ export function BlockCard({
       )}
 
       <div className="relative grid gap-6 p-5 sm:p-8 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
-        <div className="relative aspect-[3/4] w-full max-w-[15rem] overflow-hidden rounded-sm border border-line bg-raised">
+        <TiltCard className="w-full max-w-[15rem]">
+        <div className="block-photo relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-line bg-raised">
           {player.photo_url ? (
             <img src={player.photo_url} alt={player.name} className="h-full w-full object-cover" />
           ) : (
@@ -60,6 +92,7 @@ export function BlockCard({
             {ROLE_LABEL[player.role]}
           </span>
         </div>
+        </TiltCard>
 
         <div className="flex min-w-0 flex-col">
           <h2 className="mt-3 break-words text-5xl font-black sm:text-7xl">{player.name}</h2>
@@ -108,12 +141,18 @@ export function BlockCard({
             ) : (
               <p className="eyebrow">Opening price</p>
             )}
-            <p
-              key={state.current_bid ?? 'opening'}
-              className="money animate-snap text-5xl font-bold text-amber sm:text-6xl"
-            >
-              {money(state.current_bid ?? state.next_bid_amount)}
-            </p>
+            <div className="[perspective:600px]">
+              <m.p
+                key={state.current_bid ?? 'opening'}
+                className="money bid-glow inline-block text-5xl font-bold text-amber sm:text-6xl"
+                initial={{ rotateX: -80, y: 18, opacity: 0, scale: 1.15 }}
+                animate={{ rotateX: 0, y: 0, opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+                style={{ transformOrigin: '50% 100%' }}
+              >
+                {money(state.current_bid ?? state.next_bid_amount)}
+              </m.p>
+            </div>
           </div>
         </div>
       </div>
