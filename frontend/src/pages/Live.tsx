@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, m } from 'motion/react'
 
 import { BlockCard } from '../components/BlockCard'
 import { Fireworks } from '../components/Fireworks'
@@ -20,12 +21,22 @@ function HammerBanner({ hammer }: { hammer: Hammer | null }) {
     return () => window.clearTimeout(id)
   }, [hammer])
 
-  if (!shown) return null
-  const { sold, player } = shown
-
   return (
-    <div
+    <AnimatePresence>
+      {shown && <HammerBannerBody key={shown.id} hammer={shown} />}
+    </AnimatePresence>
+  )
+}
+
+function HammerBannerBody({ hammer }: { hammer: Hammer }) {
+  const { sold, player } = hammer
+  return (
+    <m.div
       role="status"
+      initial={{ opacity: 0, y: -12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
       className={`panel mb-4 flex flex-wrap items-center gap-3 border-l-4 p-4 ${
         sold ? 'border-l-amber' : 'border-l-cherry'
       }`}
@@ -42,7 +53,7 @@ function HammerBanner({ hammer }: { hammer: Hammer | null }) {
           <span className="text-amber">{money(player.sold_price)}</span>
         </span>
       )}
-    </div>
+    </m.div>
   )
 }
 

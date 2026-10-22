@@ -5,7 +5,7 @@ players from a spreadsheet, retain a few, then run the room live while every pho
 the stands watches purses drain in real time.
 
 - **Backend** — FastAPI, PostgreSQL, SQLAlchemy 2, JWT, WebSockets
-- **Frontend** — React 18, TypeScript, Vite, Tailwind, Recharts
+- **Frontend** — React 18, TypeScript, Vite, Tailwind, Recharts; 3D hero with Three.js + React Three Fiber + Drei (lazy-loaded, CSS fallback without WebGL); GSAP ScrollTrigger and Motion for animation
 - **Tests** — 193 passing, covering the auction rules, HTTP layer, Excel import and live feed
 
 ---

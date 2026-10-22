@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { LazyMotion, MotionConfig, domAnimation, m } from 'motion/react'
 
 import { APP_NAME, APP_NAME_PARTS } from '../lib/brand'
 import { useAuth, useTheme } from '../lib/hooks'
@@ -22,6 +23,10 @@ export function Layout() {
   const location = useLocation()
 
   return (
+    // reducedMotion="user": every motion component honours the OS setting.
+    // LazyMotion keeps only the DOM-animation features in the bundle.
+    <LazyMotion features={domAnimation} strict>
+    <MotionConfig reducedMotion="user">
     <div className="flex min-h-screen flex-col">
       <a
         href="#main"
@@ -31,7 +36,10 @@ export function Layout() {
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-40 border-b border-line bg-pitch/95 backdrop-blur">
+      <header
+        className="sticky top-0 z-40 border-b border-line backdrop-blur-md"
+        style={{ background: 'color-mix(in srgb, var(--pitch) 78%, transparent)' }}
+      >
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-baseline gap-2" onClick={() => setOpen(false)}>
             <span className="font-display text-2xl font-black uppercase leading-none tracking-tightest">
@@ -83,7 +91,7 @@ export function Layout() {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="btn-ghost !px-3 !py-2 md:hidden"
+              className="btn-ghost min-h-11 !px-3 !py-2 md:hidden"
               aria-expanded={open}
             >
               {open ? 'Close' : 'Menu'}
@@ -119,9 +127,17 @@ export function Layout() {
         )}
       </header>
 
-      <main id="main" key={location.pathname} className="flex-1">
+      {/* Each route arrives with a short rise; keyed by path so it replays. */}
+      <m.main
+        id="main"
+        key={location.pathname}
+        className="flex-1"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+      >
         <Outlet />
-      </main>
+      </m.main>
 
       <footer className="mt-16 border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -141,5 +157,7 @@ export function Layout() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
+    </LazyMotion>
   )
 }

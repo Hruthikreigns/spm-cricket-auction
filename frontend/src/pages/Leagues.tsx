@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { Stagger, StaggerItem, TiltCard } from '../components/motion'
 import { Empty, Eyebrow, LeagueMark, Loading, Note, Pill } from '../components/ui'
 import { useLeague } from '../lib/league'
 import type { League, LeagueStatus } from '../lib/types'
@@ -26,7 +27,7 @@ const dateLabel = (value: string | null) =>
 /** One league: mark, status, when and where — and a way in. */
 function LeagueCard({ league }: { league: League }) {
   return (
-    <Link to={`/leagues/${league.id}`} className="panel block p-5 transition hover:border-amber">
+    <Link to={`/leagues/${league.id}`} className="panel block h-full p-5 transition hover:border-amber">
       <div className="flex items-start justify-between gap-3">
         <LeagueMark league={league} />
         <Pill tone={TONE[league.status]}>{league.status.toLowerCase()}</Pill>
@@ -95,10 +96,12 @@ export function Leagues() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <Stagger key={tab} className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {shown.map((league) => (
-          <div key={league.id} className="flex flex-col gap-2">
-            <LeagueCard league={league} />
+          <StaggerItem key={league.id} className="flex flex-col gap-2">
+            <TiltCard className="flex-1">
+              <LeagueCard league={league} />
+            </TiltCard>
             <button
               type="button"
               onClick={() => select(league.id)}
@@ -106,9 +109,9 @@ export function Leagues() {
             >
               {leagueId === league.id ? 'Following' : 'Follow this league'}
             </button>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </div>
   )
 }

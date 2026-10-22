@@ -150,6 +150,79 @@
   }
 }
 
+/* Shared motion and depth tokens, used by CSS and mirrored in motion.tsx. */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-base: 420ms;
+  --glass-alpha: 62%;
+  --depth-1: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.55);
+}
+:root:not([data-theme='night']) {
+  --glass-alpha: 74%;
+  --depth-1: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 18px 40px -26px rgba(15, 28, 40, 0.28);
+}
+
+@layer components {
+  /* Frosted panel for anything that floats over the 3D scene. One level
+     only — glass on glass turns to mud. */
+  .glass {
+    @apply rounded-sm border border-line;
+    background: color-mix(in srgb, var(--panel) var(--glass-alpha), transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: var(--depth-1);
+  }
+
+  /* The accent rule under a headline: a lit edge rather than a gradient fill. */
+  .lit-rule {
+    height: 2px;
+    background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 0%, transparent));
+  }
+}
+
+/* Hero copy sits on the scene; the scrim guarantees contrast. Left-weighted
+   on wide screens (copy on the left), bottom-weighted on phones. */
+.hero-scrim {
+  background:
+    linear-gradient(0deg, var(--pitch) 0%, color-mix(in srgb, var(--pitch) 70%, transparent) 38%, transparent 70%),
+    linear-gradient(0deg, var(--pitch), transparent 18%);
+}
+@media (min-width: 768px) {
+  .hero-scrim {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--pitch) 88%, transparent) 0%, color-mix(in srgb, var(--pitch) 55%, transparent) 42%, transparent 68%),
+      linear-gradient(0deg, var(--pitch), transparent 22%);
+  }
+}
+
+/* The no-WebGL stand-in for the ball: a lit leather sphere in pure CSS. */
+.hero-ball {
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 220, 200, 0.55), transparent 22%),
+    radial-gradient(circle at 50% 50%, #a3191b 0%, #6e0f12 62%, #2a0506 100%);
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7), 0 0 120px -20px var(--flood);
+}
+.hero-ball::after {
+  content: '';
+  position: absolute;
+  inset: 0 46%;
+  border-left: 2px dashed rgba(243, 231, 207, 0.85);
+  border-right: 2px dashed rgba(243, 231, 207, 0.85);
+  transform: rotate(-24deg);
+}
+
+/* Pointer-follow highlight for depth-hover cards. */
+.tilt-glow {
+  background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 50%), var(--flood), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.tilt:hover .tilt-glow {
+  opacity: 1;
+}
+
 /* The floodlight wash sits behind the hero and the block card. */
 .floodlight::before {
   content: '';
