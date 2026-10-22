@@ -150,3 +150,42 @@ export function HeroStage({ children }: { children: ReactNode }) {
     </section>
   )
 }
+
+/**
+ * The stadium scene in a box — used inside cards (the empty auction block).
+ * Same tiering, pausing and fallback as the hero, no scroll coupling.
+ */
+export function StadiumBox({ className = '' }: { className?: string }) {
+  const box = useRef<HTMLDivElement>(null)
+  const progress = useRef(0)
+  const reducedMotion = useReducedMotion()
+  const palette = usePalette()
+  const inView = useInView(box, '60px')
+  const visible = usePageVisible()
+  const [tier, setTier] = useState<GfxTier>(() => detectTier())
+
+  return (
+    <div ref={box} aria-hidden className={`absolute inset-0 overflow-hidden ${className}`}>
+      {tier === 'none' ? (
+        <div className="floodlight crease absolute inset-0">
+          <div className="hero-ball absolute left-1/2 top-[18%] h-36 w-36 -translate-x-1/2 sm:h-44 sm:w-44" />
+        </div>
+      ) : (
+        <SceneBoundary onError={() => setTier('none')}>
+          <Suspense fallback={<div className="floodlight crease absolute inset-0" />}>
+            <StadiumScene
+              palette={palette}
+              tier={tier}
+              reducedMotion={reducedMotion}
+              active={inView && visible}
+              progress={progress}
+              eventSource={box}
+              onFail={() => setTier('none')}
+              layout="center"
+            />
+          </Suspense>
+        </SceneBoundary>
+      )}
+    </div>
+  )
+}
