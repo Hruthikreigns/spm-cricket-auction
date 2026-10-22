@@ -243,3 +243,85 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Squad page: header card and player cards ---------- */
+
+/* The team banner. --team is the squad's accent colour when it has one. */
+.squad-hero {
+  --team: var(--amber);
+  background:
+    repeating-linear-gradient(115deg, transparent 0 140px, rgba(255, 255, 255, 0.035) 140px 260px),
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--team) 32%, transparent), transparent 55%),
+    linear-gradient(135deg, #0b1d4a 0%, #0f2a66 55%, #0b1d4a 100%);
+  border: 1px solid color-mix(in srgb, var(--team) 45%, transparent);
+  border-bottom: 4px solid var(--amber);
+  box-shadow: 0 30px 60px -30px rgba(5, 12, 35, 0.75), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  color: #fff;
+}
+:root[data-theme='night'] .squad-hero {
+  background:
+    repeating-linear-gradient(115deg, transparent 0 140px, rgba(255, 255, 255, 0.03) 140px 260px),
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--team) 28%, transparent), transparent 55%),
+    linear-gradient(135deg, #0c2219 0%, #133b2b 55%, #0c2219 100%);
+}
+.squad-hero .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  backdrop-filter: blur(6px);
+}
+.squad-hero dt {
+  font-family: 'Chivo Mono', ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+.squad-hero dd {
+  margin: 0;
+  font-family: 'Chivo Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.squad-face {
+  box-shadow: 0 18px 36px -22px rgba(0, 0, 0, 0.6);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+.squad-card:hover .squad-face {
+  box-shadow: 0 34px 60px -26px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--amber);
+}
+.squad-photo {
+  transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.08);
+  transition: transform 600ms var(--ease-out);
+}
+.squad-card:hover .squad-photo {
+  transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.14);
+}
+.squad-blank {
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--amber) 22%, transparent), transparent 60%),
+    linear-gradient(160deg, var(--raised), var(--panel));
+}
+/* Navy wash under the name — readable on any photo, in every theme. */
+.squad-wash {
+  background: linear-gradient(to top, rgba(8, 20, 52, 0.96) 0%, rgba(12, 32, 80, 0.72) 42%, transparent 100%);
+}
+:root[data-theme='night'] .squad-wash {
+  background: linear-gradient(to top, rgba(6, 18, 13, 0.97) 0%, rgba(10, 32, 24, 0.72) 42%, transparent 100%);
+}
+.squad-glare {
+  background: radial-gradient(320px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.22), transparent 55%);
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.squad-card:hover .squad-glare {
+  opacity: 1;
+}

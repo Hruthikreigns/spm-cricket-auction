@@ -1,14 +1,21 @@
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { m } from 'motion/react'
 
-import { Avatar, Empty, Eyebrow, LeagueMark, Loading, Note, Stat } from '../components/ui'
+import { EASE_OUT, TiltCard } from '../components/motion'
+import { SquadPlayerCard } from '../components/SquadCards'
+import { Empty, LeagueMark, Loading, Note } from '../components/ui'
 import { api } from '../lib/api'
-import { ROLE_LABEL, money, useAsync } from '../lib/hooks'
+import { initials, money, useAsync } from '../lib/hooks'
 import { useLeague } from '../lib/league'
+
+type Filter = 'ALL' | 'RETAINED' | 'SOLD'
 
 export function TeamDetail() {
   const { teamId } = useParams()
   const { league } = useLeague()
   const id = Number(teamId)
+  const [filter, setFilter] = useState<Filter>('ALL')
 
   // Reads the league result rather than the player register: the register is
   // for organisers, but a squad and what it paid is public.
@@ -17,6 +24,18 @@ export function TeamDetail() {
     [league?.id],
   )
   const squad = query.data?.squads.find((s) => s.team.id === id) ?? null
+
+  // Retained first, then by price paid — the same order the room remembers.
+  const players = useMemo(
+    () =>
+      [...(squad?.players ?? [])]
+        .filter((p) => p.status === 'RETAINED' || p.status === 'SOLD')
+        .sort((a, b) => {
+          if (a.status !== b.status) return a.status === 'RETAINED' ? -1 : 1
+          return (b.sold_price ?? 0) - (a.sold_price ?? 0)
+        }),
+    [squad],
+  )
 
   if (query.loading) return <Loading label="Loading the squad" />
   if (query.error)
@@ -32,78 +51,124 @@ export function TeamDetail() {
       </div>
     )
 
-  const retained = squad.players.filter((p) => p.status === 'RETAINED')
-  const bought = squad.players.filter((p) => p.status === 'SOLD')
-
-  const line = (player: (typeof squad.players)[number]) => (
-    <li key={player.id} className="flex items-center gap-3 border-b border-line py-3 last:border-0">
-      <Avatar name={player.name} src={player.photo_url} jersey={player.jersey_number} size="sm" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{player.name}</p>
-        <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-muted">
-          {ROLE_LABEL[player.role]}
-          {player.place && ` · ${player.place}`}
-        </p>
-      </div>
-      <span className="money text-sm text-amber">{money(player.sold_price)}</span>
-    </li>
+  const retained = players.filter((p) => p.status === 'RETAINED')
+  const bought = players.filter((p) => p.status === 'SOLD')
+  const shown = filter === 'ALL' ? players : filter === 'RETAINED' ? retained : bought
+  const topBuy = bought.reduce<(typeof bought)[number] | null>(
+    (best, p) => ((p.sold_price ?? 0) > (best?.sold_price ?? -1) ? p : best),
+    null,
   )
 
+  const tabs: { key: Filter; label: string; count: number }[] = [
+    { key: 'ALL', label: 'All', count: players.length },
+    { key: 'RETAINED', label: 'Retained', count: retained.length },
+    { key: 'SOLD', label: 'Bought', count: bought.length },
+  ]
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <Link to={league ? `/leagues/${league.id}` : '/leagues'} className="eyebrow hover:text-amber">
-        ← Back to {league?.name ?? 'the league'}
-      </Link>
-
-      {league && (
-        <div className="mt-3">
-          <LeagueMark league={league} as="eyebrow" />
-        </div>
-      )}
-
-      <header className="mt-4 flex flex-wrap items-end gap-5">
-        <Avatar name={squad.team.name} src={squad.team.logo_url} size="lg" />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-5xl sm:text-7xl">{squad.team.name}</h1>
-          <p className="mt-2 font-mono text-xs uppercase tracking-eyebrow text-muted">
-            {squad.owner_name && `Owner ${squad.owner_name}`}
-            {squad.captain_name && ` · Captain ${squad.captain_name}`}
-          </p>
-        </div>
-      </header>
-
-      <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Squad size" value={squad.player_count} hint={`${squad.retained_count} retained`} />
-        <Stat label="Spent" value={money(squad.spent)} />
-        <Stat label="Purse left" value={money(squad.remaining_purse)} />
-        <Stat label="Most expensive" value={money(squad.most_expensive)} />
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to={league ? `/leagues/${league.id}` : '/leagues'}
+          className="eyebrow inline-flex min-h-11 items-center hover:text-amber"
+        >
+          ← Back to {league?.name ?? 'the league'}
+        </Link>
+        {league && <LeagueMark league={league} as="eyebrow" />}
       </div>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <section>
-          <Eyebrow>Retained before the auction</Eyebrow>
-          <h2 className="mt-2 text-3xl">Retained players</h2>
-          <ul className="panel mt-4 px-4">
-            {retained.length === 0 ? (
-              <p className="py-6 text-sm text-muted">No players were retained.</p>
-            ) : (
-              retained.map(line)
-            )}
-          </ul>
-        </section>
+      {/* Team banner */}
+      <m.header
+        className="squad-hero relative mt-3 overflow-hidden rounded-2xl p-5 sm:p-8"
+        initial={{ opacity: 0, y: 24, rotateX: 10 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 0.8, ease: EASE_OUT }}
+        style={{ transformPerspective: 1200 }}
+      >
+        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
+          <div className="min-w-0">
+            <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/70">Squad</p>
+            <h1 className="mt-2 break-words text-5xl font-black text-white sm:text-7xl">{squad.team.name}</h1>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {squad.owner_name && <span className="chip">Owner: {squad.owner_name}</span>}
+              {squad.captain_name && <span className="chip">Captain: {squad.captain_name}</span>}
+              <span className="chip">{squad.player_count} players</span>
+              {squad.retained_count > 0 && <span className="chip">{squad.retained_count} retained</span>}
+            </div>
+          </div>
 
-        <section>
-          <Eyebrow>Won at the table</Eyebrow>
-          <h2 className="mt-2 text-3xl">Bought players</h2>
-          <ul className="panel mt-4 px-4">
-            {bought.length === 0 ? (
-              <p className="py-6 text-sm text-muted">Nothing bought yet.</p>
-            ) : (
-              bought.map(line)
-            )}
-          </ul>
-        </section>
-      </div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-white/15 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:pl-8">
+            <div>
+              <dt>Spent</dt>
+              <dd className="text-2xl sm:text-3xl">{money(squad.spent)}</dd>
+            </div>
+            <div>
+              <dt>Remaining</dt>
+              <dd className="text-2xl sm:text-3xl">{money(squad.remaining_purse)}</dd>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <dt>Top buy</dt>
+              <dd className="text-2xl sm:text-3xl">{money(topBuy?.sold_price ?? squad.most_expensive)}</dd>
+              {topBuy && <p className="mt-0.5 truncate text-xs text-white/75">{topBuy.name}</p>}
+            </div>
+          </dl>
+
+          {/* The squad's badge, floating on its own plane. */}
+          <TiltCard className="hidden w-40 shrink-0 sm:block lg:w-44">
+            <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border-2 border-white/80 bg-white shadow-2xl">
+              {squad.team.logo_url ? (
+                <img src={squad.team.logo_url} alt={`${squad.team.name} logo`} className="h-full w-full object-contain p-2" />
+              ) : (
+                <span className="font-display text-6xl font-black text-[#0f1c3f]">
+                  {(squad.team.short_name ?? initials(squad.team.name)).slice(0, 3)}
+                </span>
+              )}
+            </div>
+          </TiltCard>
+        </div>
+      </m.header>
+
+      {/* Squad lineup */}
+      <section className="mt-10 sm:mt-12">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-4xl sm:text-5xl">Squad lineup</h2>
+            <div className="lit-rule mt-3 w-28" />
+          </div>
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto" role="tablist" aria-label="Filter the squad">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={filter === t.key}
+                onClick={() => setFilter(t.key)}
+                className={`${filter === t.key ? 'btn-primary' : 'btn-ghost'} min-h-11 !px-2 sm:!px-4`}
+              >
+                {t.label} · {t.count}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {shown.length === 0 ? (
+          <div className="mt-6">
+            <Empty
+              title={filter === 'RETAINED' ? 'No players were retained' : 'Nobody here yet'}
+              hint="Players appear here as the hammer falls."
+            />
+          </div>
+        ) : (
+          <div
+            key={filter}
+            className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5"
+          >
+            {shown.map((player, i) => (
+              <SquadPlayerCard key={player.id} player={player} index={i} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
