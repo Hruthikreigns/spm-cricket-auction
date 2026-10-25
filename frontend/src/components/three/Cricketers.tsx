@@ -1,5 +1,4 @@
 import { useFrame } from '@react-three/fiber'
-import { Trail } from '@react-three/drei'
 import { useMemo, useRef, type MutableRefObject, type RefObject } from 'react'
 import * as THREE from 'three'
 
@@ -284,13 +283,10 @@ function faceToward(from: THREE.Vector3, to: THREE.Vector3) {
 export function Cricketers({
   reducedMotion,
   lite,
-  trails,
 }: {
   reducedMotion: boolean
   /** Phones / stepped-down GPUs: fewer fielders, no player shadows. */
   lite: boolean
-  /** Light trail behind the ball (Ultra theme). */
-  trails: boolean
 }) {
   const kits = useKits()
   const bowler = useRef<Rig>(emptyRig())
@@ -465,26 +461,16 @@ export function Cricketers({
         <Figure key={i} rig={fieldRigs.current[i]} kit={kits.fielding} role="fielder" shadow={false} />
       ))}
 
-      {trails ? (
-        <Trail width={0.35} length={5} color={new THREE.Color(4, 1.2, 1.4)} attenuation={(x) => x * x}>
-          <BallMesh ballRef={ball} glow />
-        </Trail>
-      ) : (
-        <BallMesh ballRef={ball} glow={false} />
-      )}
+      <BallMesh ballRef={ball} />
     </group>
   )
 }
 
-function BallMesh({ ballRef, glow }: { ballRef: RefObject<THREE.Mesh>; glow: boolean }) {
+function BallMesh({ ballRef }: { ballRef: RefObject<THREE.Mesh> }) {
   return (
     <mesh ref={ballRef} castShadow scale={0.07}>
       <sphereGeometry args={[1, 16, 12]} />
-      {glow ? (
-        <meshBasicMaterial color={[3.2, 0.5, 0.5]} toneMapped={false} />
-      ) : (
-        <meshStandardMaterial color="#b3151b" roughness={0.35} emissive="#5a0a0d" />
-      )}
+      <meshStandardMaterial color="#b3151b" roughness={0.35} emissive="#5a0a0d" />
     </mesh>
   )
 }

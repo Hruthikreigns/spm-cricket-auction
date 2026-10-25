@@ -52,13 +52,12 @@ export const initials = (name: string) =>
 // --------------------------------------------------------------------------
 // Theme
 // --------------------------------------------------------------------------
-export type Theme = 'night' | 'day' | 'royal' | 'ultra'
+export type Theme = 'night' | 'day' | 'royal'
 
 export const THEMES: { key: Theme; label: string; hint: string }[] = [
   { key: 'night', label: 'Night', hint: 'Dark hall, big screen' },
   { key: 'day', label: 'Day', hint: 'Daylight and print' },
   { key: 'royal', label: 'Royal', hint: 'White and violet, for projectors' },
-  { key: 'ultra', label: 'Ultra', hint: 'Neon night with full visual effects' },
 ]
 
 export function useTheme() {

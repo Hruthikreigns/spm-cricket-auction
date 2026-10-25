@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { Environment, Lightformer, PerformanceMonitor, Sparkles, Trail } from '@react-three/drei'
-import { Bloom, ChromaticAberration, EffectComposer, Noise, ToneMapping, Vignette } from '@react-three/postprocessing'
-import { BlendFunction, ToneMappingMode } from 'postprocessing'
+import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei'
+import { Bloom, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing'
+import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from 'react'
 import * as THREE from 'three'
 
@@ -143,21 +143,8 @@ const BALL_Z = 10.2
 const SCREEN_MID_Y = 1.94
 const STITCHES = 72
 
-function Ball({
-  reducedMotion,
-  tier,
-  layout = 'hero',
-  groupRef,
-}: {
-  reducedMotion: boolean
-  tier: 'low' | 'high'
-  layout?: 'hero' | 'center'
-  groupRef?: MutableRefObject<THREE.Group | null>
-}) {
+function Ball({ reducedMotion, tier, layout = 'hero' }: { reducedMotion: boolean; tier: 'low' | 'high'; layout?: 'hero' | 'center' }) {
   const group = useRef<THREE.Group>(null)
-  useEffect(() => {
-    if (groupRef) groupRef.current = group.current
-  })
   const spinner = useRef<THREE.Group>(null)
   const stitches = useRef<THREE.InstancedMesh>(null)
   const { camera, size } = useThree()
@@ -348,12 +335,11 @@ function Stumps({ z, wood }: { z: number; wood: string }) {
 }
 
 function Ground({ palette }: { palette: Palette }) {
-  const grass = palette.ultra ? '#0a0f24' : palette.dark ? '#123524' : new THREE.Color(palette.raised).lerp(new THREE.Color('#9ccc8a'), 0.35).getStyle()
+  const grass = palette.dark ? '#123524' : new THREE.Color(palette.raised).lerp(new THREE.Color('#9ccc8a'), 0.35).getStyle()
   const tex = useMemo(() => outfieldTexture(grass, palette.dark), [grass, palette.dark])
   useEffect(() => () => tex.dispose(), [tex])
-  const strip = palette.ultra ? '#1b1f44' : palette.dark ? '#b8a272' : new THREE.Color(palette.willow).lerp(new THREE.Color('#e8dcc0'), 0.6).getStyle()
-  // Ultra: crease lines glow neon cyan (above 1.0 so the bloom catches them).
-  const chalk: string | [number, number, number] = palette.ultra ? [0.9, 3.2, 4] : palette.dark ? '#f2efe6' : '#ffffff'
+  const strip = palette.dark ? '#b8a272' : new THREE.Color(palette.willow).lerp(new THREE.Color('#e8dcc0'), 0.6).getStyle()
+  const chalk = palette.dark ? '#f2efe6' : '#ffffff'
 
   return (
     <group>
@@ -434,8 +420,7 @@ const LAMP_COLS = 5
 function Floodlights({ palette, tier }: { palette: Palette; tier: 'low' | 'high' }) {
   const lamps = useRef<THREE.InstancedMesh>(null)
   const beamColor = useMemo(() => new THREE.Color(palette.dark ? '#ffe2a6' : palette.amber), [palette])
-  const beamOpacity = palette.ultra ? 0.17 : palette.dark ? (tier === 'high' ? 0.11 : 0.08) : 0.0
-  const neon = useMemo(() => [new THREE.Color('#5ce1ff'), new THREE.Color('#ff3d7f')], [])
+  const beamOpacity = palette.dark ? (tier === 'high' ? 0.11 : 0.08) : 0.0
 
   const heads = useMemo(
     () =>
@@ -482,7 +467,7 @@ function Floodlights({ palette, tier }: { palette: Palette; tier: 'low' | 'high'
   const halo = useMemo(haloTexture, [])
   useEffect(() => () => halo.dispose(), [halo])
 
-  const steel = palette.ultra ? '#1c2046' : palette.dark ? '#2a3a33' : new THREE.Color(palette.line).getStyle()
+  const steel = palette.dark ? '#2a3a33' : new THREE.Color(palette.line).getStyle()
 
   return (
     <group>
@@ -524,7 +509,7 @@ function Floodlights({ palette, tier }: { palette: Palette; tier: 'low' | 'high'
               <shaderMaterial
                 vertexShader={beamVertex}
                 fragmentShader={beamFragment}
-                uniforms={{ uColor: { value: palette.ultra ? neon[idx % 2] : beamColor }, uOpacity: { value: beamOpacity } }}
+                uniforms={{ uColor: { value: beamColor }, uOpacity: { value: beamOpacity } }}
                 transparent
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
@@ -603,7 +588,7 @@ function Motes({ count, palette, reducedMotion }: { count: number; palette: Pale
     }),
     [gl],
   )
-  uniforms.uColor.value.set(palette.ultra ? '#7fe9ff' : palette.dark ? '#ffd690' : palette.amber)
+  uniforms.uColor.value.set(palette.dark ? '#ffd690' : palette.amber)
   uniforms.uOpacity.value = palette.dark ? 0.85 : 0.45
 
   useFrame((state) => {
@@ -682,7 +667,7 @@ function Lights({ palette, tier }: { palette: Palette; tier: 'low' | 'high' }) {
   return (
     <>
       <primitive object={target} />
-      <hemisphereLight args={[palette.ultra ? '#6a5cff' : palette.dark ? '#5d7a8c' : '#ffffff', palette.dark ? palette.pitch : '#b9c9b0', palette.dark ? 0.35 : 1.4]} />
+      <hemisphereLight args={[palette.dark ? '#5d7a8c' : '#ffffff', palette.dark ? '#0a1410' : '#b9c9b0', palette.dark ? 0.35 : 1.4]} />
       <spotLight
         ref={key}
         position={[13, 11.5, -26]}
@@ -700,169 +685,7 @@ function Lights({ palette, tier }: { palette: Palette; tier: 'low' | 'high' }) {
       />
       <spotLight position={[-26, 11.5, -4]} angle={0.5} penumbra={0.8} intensity={palette.dark ? 2200 : 800} distance={90} decay={2} color={warm} />
       {/* Rim from behind the camera so the ball's clearcoat catches a line. */}
-      <directionalLight position={[-3, 4, 16]} intensity={palette.ultra ? 1.4 : palette.dark ? 0.6 : 1.2} color={palette.ultra ? '#5ce1ff' : palette.dark ? '#9fc6ff' : '#ffffff'} />
-      {/* Ultra: a magenta kicker from the other side for a two-tone rim. */}
-      {palette.ultra && <pointLight position={[4, 3, 12]} intensity={6} distance={10} color="#ff3d7f" />}
-    </>
-  )
-}
-
-
-// --------------------------------------------------------------------------
-// Ultra theme effects: comets with light trails orbiting the ball, sparkles,
-// sweeping searchlights into the sky and a pulsing neon boundary rope.
-// Only mounted for the Ultra theme on devices that haven't stepped down.
-// --------------------------------------------------------------------------
-const COMETS = [
-  { color: [0.6, 3.6, 4.5] as [number, number, number], radius: 1.55, speed: 1.25, tilt: 0.5, phase: 0 },
-  { color: [4.5, 0.8, 2.4] as [number, number, number], radius: 1.8, speed: -0.95, tilt: -0.7, phase: 2.1 },
-  { color: [4.8, 3.6, 0.6] as [number, number, number], radius: 1.35, speed: 1.6, tilt: 1.2, phase: 4.2 },
-]
-
-function Comet({
-  ball,
-  radius,
-  speed,
-  tilt,
-  phase,
-  color,
-}: {
-  ball: MutableRefObject<THREE.Group | null>
-  radius: number
-  speed: number
-  tilt: number
-  phase: number
-  color: [number, number, number]
-}) {
-  const head = useRef<THREE.Mesh>(null)
-  const centre = useMemo(() => new THREE.Vector3(), [])
-  const trailColor = useMemo(() => new THREE.Color(...color), [color])
-  useFrame((state) => {
-    const b = ball.current
-    const h = head.current
-    if (!b || !h) return
-    b.getWorldPosition(centre)
-    const k = b.scale.x * BALL_RADIUS // orbit scales with the ball as it resizes
-    const a = state.clock.elapsedTime * speed + phase
-    h.position.set(
-      centre.x + Math.cos(a) * radius * k,
-      centre.y + Math.sin(a) * Math.sin(tilt) * radius * k,
-      centre.z + Math.sin(a) * Math.cos(tilt) * radius * k,
-    )
-  })
-  return (
-    <Trail width={0.55} length={4} color={trailColor} attenuation={(t) => t * t} decay={1.4} interval={1}>
-      <mesh ref={head}>
-        <sphereGeometry args={[0.018, 12, 12]} />
-        <meshBasicMaterial color={color} toneMapped={false} />
-      </mesh>
-    </Trail>
-  )
-}
-
-function Searchlights() {
-  const beams = useRef<(THREE.Mesh | null)[]>([])
-  const geometry = useMemo(() => {
-    const g = new THREE.CylinderGeometry(0.02, 1, 1, 24, 1, true)
-    g.translate(0, 0.5, 0) // base at the origin, opening upward
-    return g
-  }, [])
-  const colours = useMemo(() => [new THREE.Color('#5ce1ff'), new THREE.Color('#ff3d7f'), new THREE.Color('#ffd23f'), new THREE.Color('#5ce1ff')], [])
-  const origins: [number, number, number][] = [
-    [-13, TOWER_HEIGHT + 0.8, -26],
-    [13, TOWER_HEIGHT + 0.8, -26],
-    [-26, TOWER_HEIGHT + 0.8, -4],
-    [26, TOWER_HEIGHT + 0.8, -4],
-  ]
-  const up = useMemo(() => new THREE.Vector3(0, 1, 0), [])
-  const dir = useMemo(() => new THREE.Vector3(), [])
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    beams.current.forEach((m, i) => {
-      if (!m) return
-      const side = origins[i][0] > 0 ? -1 : 1
-      dir.set(side * 0.35 + Math.sin(t * 0.35 + i * 1.7) * 0.45, 1, 0.15 + Math.cos(t * 0.27 + i) * 0.25).normalize()
-      m.quaternion.setFromUnitVectors(up, dir)
-    })
-  })
-  return (
-    <group>
-      {origins.map((o, i) => (
-        <mesh
-          key={i}
-          ref={(el) => {
-            beams.current[i] = el
-          }}
-          geometry={geometry}
-          position={o}
-          scale={[1.4, 70, 1.4]}
-          renderOrder={2}
-        >
-          <shaderMaterial
-            vertexShader={beamVertex}
-            fragmentShader={/* glsl */ `
-              uniform vec3 uColor;
-              uniform float uOpacity;
-              varying float vAlong;
-              varying vec3 vNormalV;
-              varying vec3 vViewDir;
-              void main() {
-                float edge = pow(abs(dot(vNormalV, vViewDir)), 2.0);
-                float fade = pow(1.0 - vAlong, 1.6);
-                gl_FragColor = vec4(uColor, edge * fade * uOpacity);
-              }
-            `}
-            uniforms={{ uColor: { value: colours[i] }, uOpacity: { value: 0.22 } }}
-            transparent
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
-function BoundaryRope() {
-  const mat = useRef<THREE.MeshBasicMaterial>(null)
-  useFrame((state) => {
-    if (!mat.current) return
-    const p = 0.75 + Math.sin(state.clock.elapsedTime * 1.6) * 0.25
-    mat.current.color.setRGB(4.2 * p, 0.7 * p, 2.4 * p)
-  })
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -4]}>
-      <ringGeometry args={[23.8, 24.05, 160]} />
-      <meshBasicMaterial ref={mat} toneMapped={false} />
-    </mesh>
-  )
-}
-
-function UltraFX({
-  ball,
-  reducedMotion,
-  lite,
-}: {
-  ball: MutableRefObject<THREE.Group | null>
-  reducedMotion: boolean
-  /** Phones and slower GPUs: only the cheap layers (rope and sparkles). */
-  lite: boolean
-}) {
-  if (lite)
-    return (
-      <>
-        <BoundaryRope />
-        <Sparkles count={40} scale={[24, 8, 22]} position={[0, 4, -4]} size={3} speed={0.3} color="#ffd23f" opacity={0.8} />
-      </>
-    )
-  return (
-    <>
-      {!reducedMotion && COMETS.map((c, i) => <Comet key={i} ball={ball} {...c} />)}
-      {!reducedMotion && <Searchlights />}
-      <BoundaryRope />
-      <Sparkles count={90} scale={[30, 9, 26]} position={[0, 4.5, -4]} size={3.2} speed={0.35} color="#ffd23f" opacity={0.8} />
-      <Sparkles count={60} scale={[30, 9, 26]} position={[0, 4.5, -4]} size={2.4} speed={0.25} color="#5ce1ff" opacity={0.7} />
+      <directionalLight position={[-3, 4, 16]} intensity={palette.dark ? 0.6 : 1.2} color={palette.dark ? '#9fc6ff' : '#ffffff'} />
     </>
   )
 }
@@ -879,17 +702,9 @@ export default function StadiumScene({
   layout = 'hero',
 }: StadiumSceneProps) {
   const [degraded, setDegraded] = useState(tier === 'low')
-  // Ultra on a strong device renders at the screen's full native resolution
-  // (sharp on 4K displays); everything else keeps the usual caps.
-  const maxDpr = tier === 'high' ? (palette.ultra ? 3 : 2) : 1.25
+  const maxDpr = tier === 'high' ? 2 : 1.25
   const [dpr, setDpr] = useState(Math.min(window.devicePixelRatio || 1, maxDpr))
-  useEffect(() => {
-    if (!degraded) setDpr(Math.min(window.devicePixelRatio || 1, maxDpr))
-  }, [maxDpr, degraded])
   const bloom = !degraded && palette.dark
-  const ultraFx = palette.ultra && !degraded
-  const ballRef = useRef<THREE.Group | null>(null)
-  const aberration = useMemo(() => new THREE.Vector2(0.0009, 0.0006), [])
 
   const frameloop = !active ? 'never' : reducedMotion ? 'demand' : 'always'
 
@@ -934,34 +749,22 @@ export default function StadiumScene({
           a downloaded HDR. */}
       <Environment resolution={degraded ? 64 : 256} frames={1}>
         <Lightformer form="rect" intensity={palette.dark ? 4 : 2.5} color="#fff1d6" position={[4, 5, 3]} scale={[6, 3, 1]} />
-        <Lightformer form="rect" intensity={1.6} color={palette.ultra ? '#ff3d7f' : palette.dark ? '#8fb8ff' : '#ffffff'} position={[-5, 2, 4]} scale={[3, 6, 1]} />
+        <Lightformer form="rect" intensity={1.6} color={palette.dark ? '#8fb8ff' : '#ffffff'} position={[-5, 2, 4]} scale={[3, 6, 1]} />
         <Lightformer form="ring" intensity={2} color={palette.amber} position={[0, 6, -6]} scale={4} />
       </Environment>
 
       <Ground palette={palette} />
       <Floodlights palette={palette} tier={degraded ? 'low' : 'high'} />
       <Motes count={degraded ? 380 : 1400} palette={palette} reducedMotion={reducedMotion} />
-      <Ball reducedMotion={reducedMotion} tier={degraded ? 'low' : 'high'} layout={layout} groupRef={ballRef} />
-      <Cricketers reducedMotion={reducedMotion} lite={degraded} trails={palette.ultra && !degraded} />
-      {palette.ultra && <UltraFX ball={ballRef} reducedMotion={reducedMotion} lite={degraded} />}
+      <Ball reducedMotion={reducedMotion} tier={degraded ? 'low' : 'high'} layout={layout} />
+      <Cricketers reducedMotion={reducedMotion} lite={degraded} />
 
       {bloom ? (
-        ultraFx ? (
-          // Ultra grade: hotter bloom, a touch of lens fringing and film grain.
-          <EffectComposer multisampling={0} enableNormalPass={false}>
-            <Bloom mipmapBlur luminanceThreshold={0.85} luminanceSmoothing={0.25} intensity={1.5} radius={0.82} />
-            <ChromaticAberration offset={aberration} radialModulation={false} modulationOffset={0} />
-            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.18} />
-            <Vignette offset={0.2} darkness={0.7} />
-            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-          </EffectComposer>
-        ) : (
-          <EffectComposer multisampling={0} enableNormalPass={false}>
-            <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.2} intensity={0.85} radius={0.7} />
-            <Vignette offset={0.25} darkness={0.55} />
-            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-          </EffectComposer>
-        )
+        <EffectComposer multisampling={0} enableNormalPass={false}>
+          <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.2} intensity={0.85} radius={0.7} />
+          <Vignette offset={0.25} darkness={0.55} />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        </EffectComposer>
       ) : null}
     </Canvas>
   )

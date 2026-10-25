@@ -97,8 +97,6 @@ export interface Palette {
   cherry: string
   willow: string
   dark: boolean
-  /** The neon theme: turns on the extra effects in the 3D scenes. */
-  ultra: boolean
 }
 
 function readPalette(): Palette {
@@ -115,8 +113,7 @@ function readPalette(): Palette {
     amber: v('--amber', '#ffb020'),
     cherry: v('--cherry', '#e86b60'),
     willow: v('--willow', '#e3cfa0'),
-    dark: theme === 'night' || theme === 'ultra',
-    ultra: theme === 'ultra',
+    dark: theme === 'night',
   }
 }
 
